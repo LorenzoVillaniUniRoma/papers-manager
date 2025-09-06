@@ -465,3 +465,33 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* Responsive adjustments for small screens */
+@media (max-width: 600px) {
+  body {
+    font-size: 16px;
+  }
+  .stats {
+    flex-direction: column;
+  }
+  .stat-card {
+    margin-bottom: 0.5rem;
+  }
+  .paper-title,
+  .journal-name,
+  .conference-name {
+    font-size: 1.1rem;
+  }
+  .paper-card,
+  .journal-card,
+  .conference-card {
+    padding: 0.75rem;
+  }
+  .nav-item {
+    flex-direction: column;
+    font-size: 0.75rem;
+  }
+  .nav-item .icon {
+    margin-bottom: 2px;
+  }
+}
