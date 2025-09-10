@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Research Manager</title>
+  <!-- Style sheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Login page: prompts for user name before showing the app -->
+  <div id="loginPage" class="login-page hidden">
+    <form id="loginForm" class="login-form">
+      <h2>Welcome</h2>
+      <p>Please enter your name to continue.</p>
+      <input type="text" id="userNameInput" placeholder="Your name" required />
+      <button type="submit">Continue</button>
+    </form>
+  </div>
+
+  <div class="app hidden" id="app">
+    <!-- Header with app title and user info -->
+    <header class="app-header">
+      <div class="header-left">
+        <h1 class="app-title">Research Manager</h1>
+        <!-- User name will be populated via script after login -->
+        <p class="username" id="displayUserName">User</p>
+      </div>
+      <div class="header-right">
+        <button id="searchBtn" class="header-icon" aria-label="Search">
+          <!-- simple magnifying glass svg -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
+        <button id="notificationsBtn" class="header-icon" aria-label="Notifications">
+          <!-- simple bell svg -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0v5H4l2 2v1h12v-1l2-2h-2V8z"></path><path d="M13.73 21a2 2 0 01-3.46 0"></path></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Pages -->
+    <main id="dashboardPage" class="page">
+      <section class="stats">
+        <div class="stat-card">
+          <div class="stat-number" id="activePapersCount">0</div>
+          <div class="stat-label">Active Papers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="dueThisWeekCount">0</div>
+          <div class="stat-label">Due This Week</div>
+        </div>
+      </section>
+      <section class="urgent-deadlines">
+        <h2>Urgent Deadlines</h2>
+        <div id="urgentDeadlinesList" class="empty-state">
+          <div class="empty-icon">
+            <!-- clock icon -->
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <p>No urgent deadlines</p>
+        </div>
+      </section>
+      <section class="recent-papers">
+        <div class="section-header">
+          <h2>Recent Papers</h2>
+          <button class="view-all-btn" data-target="papersPage">View All</button>
+        </div>
+        <div id="recentPapersList">
+          <!-- recent papers will be inserted here -->
+        </div>
+      </section>
+    </main>
+
+    <main id="papersPage" class="page hidden">
+      <section class="section-header">
+        <h2>Papers</h2>
+        <button id="addPaperBtn" class="add-circle-btn" title="Add new paper" aria-label="Add paper">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </section>
+      <div id="papersFilterTabs" class="tabs">
+        <button class="tab active" data-status="all">All (<span id="papersCount">0</span>)</button>
+        <button class="tab" data-status="idea">Ideas</button>
+        <button class="tab" data-status="planning">Planning</button>
+        <button class="tab" data-status="writing">Writing</button>
+        <button class="tab" data-status="submitted">Submitted</button>
+      </div>
+      <div id="papersList" class="list-container">
+        <!-- papers list will be inserted here -->
+      </div>
+    </main>
+
+    <main id="journalsPage" class="page hidden">
+      <section class="section-header">
+        <h2>Journals</h2>
+        <button id="addJournalBtn" class="add-circle-btn" title="Add new journal" aria-label="Add journal">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </section>
+      <div id="journalsList" class="list-container">
+        <!-- journals list will be inserted here -->
+      </div>
+    </main>
+
+    <main id="conferencesPage" class="page hidden">
+      <section class="section-header">
+        <h2>Conferences</h2>
+        <button id="addConferenceBtn" class="add-circle-btn" title="Add new conference" aria-label="Add conference">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </section>
+      <div id="conferencesList" class="list-container">
+        <!-- conferences will be inserted here -->
+      </div>
+    </main>
+
+    <!-- Bottom navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-target="dashboardPage">
+        <span class="nav-icon">
+          <!-- home icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7"></path><path d="M9 22V12h6v10"></path></svg>
+        </span>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" data-target="papersPage">
+        <span class="nav-icon">
+          <!-- file icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        </span>
+        <span class="nav-label">Papers</span>
+      </button>
+      <button class="nav-item" data-target="journalsPage">
+        <span class="nav-icon">
+          <!-- book icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v15H6.5a2.5 2.5 0 0 0-2.5 2.5z"></path></svg>
+        </span>
+        <span class="nav-label">Journals</span>
+      </button>
+      <button class="nav-item" data-target="conferencesPage">
+        <span class="nav-icon">
+          <!-- users icon for conferences -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87"></path><path d="M10 17a4 4 0 0 0-3 3.87v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </span>
+        <span class="nav-label">Conferences</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Modal overlay for forms -->
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle"></h3>
+        <button id="closeModalBtn" class="close-modal" aria-label="Close">&times;</button>
+      </div>
+      <div id="modalContent" class="modal-content"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
