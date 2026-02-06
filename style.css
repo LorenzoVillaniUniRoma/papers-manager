@@ -25,6 +25,8 @@ body {
   color: var(--text-color);
   height: 100vh;
   overflow: hidden;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .app {
@@ -38,7 +40,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: calc(1rem + env(safe-area-inset-top)) 1rem 1rem;
   background-color: var(--primary-color);
   color: #fff;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -411,9 +413,10 @@ body {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  height: var(--nav-height);
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom));
   background: #fff;
   border-top: 1px solid #e0e0ea;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .nav-item {
   display: flex;
