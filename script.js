@@ -22,6 +22,7 @@ function setStorageKeysForUser(userName) {
 let papers = [];
 let journals = [];
 let conferences = [];
+let discoveryResults = [];
 
 // Helper: load from localStorage
 function loadData() {
@@ -147,6 +148,7 @@ function renderDashboard() {
         <div class="paper-description">${p.description || ''}</div>
         <div class="paper-meta">
           ${p.journalIds && p.journalIds.length > 0 ? `<span>Journal: ${p.journalIds.map((id) => getJournalNameById(id)).join(', ')}</span>` : ''}
+          ${p.conferenceId ? `<span>• Conference: ${getConferenceNameById(p.conferenceId)}</span>` : ''}
           ${p.deadline ? `<span>• Deadline: ${formatDate(p.deadline)}</span>` : ''}
         </div>
         <span class="paper-badge">${capitalize(p.status || 'idea')} Phase</span>
@@ -162,6 +164,11 @@ function renderDashboard() {
 function getJournalNameById(id) {
   const j = journals.find((j) => j.id === id);
   return j ? j.name : '';
+}
+
+function getConferenceNameById(id) {
+  const conf = conferences.find((c) => c.id === id);
+  return conf ? conf.name : '';
 }
 
 // Capitalize first letter
@@ -192,6 +199,7 @@ function renderPapersList(filter = 'all') {
       <div class="paper-description">${p.description || ''}</div>
       <div class="paper-meta">
         ${p.journalIds && p.journalIds.length > 0 ? `<span>Journal: ${p.journalIds.map((id) => getJournalNameById(id)).join(', ')}</span>` : ''}
+        ${p.conferenceId ? `<span>• Conference: ${getConferenceNameById(p.conferenceId)}</span>` : ''}
         ${p.deadline ? `<span>• Deadline: ${formatDate(p.deadline)}</span>` : ''}
       </div>
       <span class="paper-badge">${capitalize(p.status)} Phase</span>
@@ -377,8 +385,13 @@ function showEditPaperModal(paperId) {
       <small>Select one or more journals</small>
     </div>
     <div class="form-group">
-      <label for="editPaperConference">Conference URL (optional)</label>
-      <input type="url" id="editPaperConference" name="conferenceLink" value="${paper.conferenceLink || ''}" placeholder="https://" />
+      <label for="editPaperConference">Link to Conference (optional)</label>
+      <select id="editPaperConference" name="conferenceId">
+        <option value="">Select a conference</option>
+        ${conferences
+          .map((c) => `<option value="${c.id}" ${paper.conferenceId === c.id ? 'selected' : ''}>${c.name}</option>`)
+          .join('')}
+      </select>
     </div>
     <div class="form-group">
       <label for="editPaperNotes">Notes (optional)</label>
@@ -396,7 +409,7 @@ function showEditPaperModal(paperId) {
     paper.deadline = formData.get('deadline') || null;
     paper.status = formData.get('status');
     paper.journalIds = formData.getAll('journalIds');
-    paper.conferenceLink = formData.get('conferenceLink').trim() || null;
+    paper.conferenceId = formData.get('conferenceId') || '';
     paper.notes = formData.get('notes').trim() || null;
     saveData();
     renderDashboard();
@@ -536,8 +549,11 @@ function showAddPaperModal() {
       <small>Select one or more journals</small>
     </div>
     <div class="form-group">
-      <label for="paperConferences">Conference URL (optional)</label>
-      <input type="url" id="paperConferences" name="conferenceLink" placeholder="https://" />
+      <label for="paperConferences">Link to Conference (optional)</label>
+      <select id="paperConferences" name="conferenceId">
+        <option value="">Select a conference</option>
+        ${conferences.map((c) => `<option value="${c.id}">${c.name}</option>`).join('')}
+      </select>
     </div>
     <div class="form-group">
       <label for="paperNotes">Notes (optional)</label>
@@ -557,7 +573,7 @@ function showAddPaperModal() {
       deadline: formData.get('deadline') || null,
       status: formData.get('status'),
       journalIds: formData.getAll('journalIds'),
-      conferenceLink: formData.get('conferenceLink').trim() || null,
+      conferenceId: formData.get('conferenceId') || '',
       notes: formData.get('notes').trim() || null,
       createdAt: new Date().toISOString(),
     };
@@ -659,11 +675,188 @@ function showAddConferenceModal() {
     };
     conferences.push(newConference);
     saveData();
-    renderConferencesList();
-    closeModal();
+  renderConferencesList();
+  closeModal();
   });
   form.querySelector('#cancelConfBtn').addEventListener('click', () => {
     closeModal();
+  });
+}
+
+function buildDiscoveryCard(item) {
+  const card = document.createElement('div');
+  card.className = 'discovery-result-card';
+  if (item.type === 'journal') {
+    card.innerHTML = `
+      <h4>${item.name}</h4>
+      <div class="discovery-meta">${item.publisher || 'Publisher not available'}</div>
+      <div class="discovery-meta">${item.subject || ''}</div>
+      <div class="discovery-actions">
+        <button class="btn-primary" data-add="journal" data-id="${item.id}">Add Journal</button>
+        ${item.link ? `<a class="outline" href="${item.link}" target="_blank" rel="noopener noreferrer">Visit</a>` : ''}
+      </div>
+    `;
+  } else {
+    card.innerHTML = `
+      <h4>${item.name}</h4>
+      <div class="discovery-meta">${item.subtitle || 'Conference details'}</div>
+      <div class="discovery-actions">
+        <button class="btn-primary" data-add="conference" data-id="${item.id}">Add Conference</button>
+        ${item.link ? `<a class="outline" href="${item.link}" target="_blank" rel="noopener noreferrer">Visit</a>` : ''}
+      </div>
+    `;
+  }
+  return card;
+}
+
+function renderDiscoveryResults(results) {
+  const container = document.getElementById('discoveryResults');
+  container.innerHTML = '';
+  if (results.length === 0) {
+    container.innerHTML = '<p class="muted">No results yet. Try another keyword.</p>';
+    return;
+  }
+  results.forEach((item) => {
+    container.appendChild(buildDiscoveryCard(item));
+  });
+}
+
+async function fetchJournalSuggestions(query) {
+  const url = `https://api.crossref.org/journals?query=${encodeURIComponent(query)}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  const items = data.message.items || [];
+  return items.slice(0, 8).map((item) => ({
+    id: `jr-${item['issn'] ? item['issn'][0] : Math.random().toString(36).slice(2)}`,
+    type: 'journal',
+    name: item.title || 'Untitled Journal',
+    publisher: item.publisher || '',
+    link: item.URL || '',
+    subject: item.subject ? item.subject.slice(0, 2).join(', ') : '',
+  }));
+}
+
+async function fetchConferenceSuggestions(query) {
+  const url = `https://dblp.org/search/conf/api?q=${encodeURIComponent(query)}&format=json`;
+  const response = await fetch(url);
+  const data = await response.json();
+  const hits = data.result?.hits?.hit || [];
+  return hits.slice(0, 8).map((hit) => ({
+    id: `cf-${hit.info?.key || Math.random().toString(36).slice(2)}`,
+    type: 'conference',
+    name: hit.info?.title || 'Conference',
+    link: hit.info?.url || '',
+    subtitle: hit.info?.venue || 'DBLP conference',
+  }));
+}
+
+function addDiscoveryItem(item) {
+  if (item.type === 'journal') {
+    const exists = journals.some((j) => j.name.toLowerCase() === item.name.toLowerCase());
+    if (exists) return;
+    journals.push({
+      id: Date.now().toString(),
+      name: item.name,
+      publisher: item.publisher || '',
+      category: item.subject || '',
+      link: item.link || '',
+      ifValue: '',
+      createdAt: new Date().toISOString(),
+    });
+    saveData();
+    renderJournalsList();
+  } else {
+    const exists = conferences.some((c) => c.name.toLowerCase() === item.name.toLowerCase());
+    if (exists) return;
+    conferences.push({
+      id: Date.now().toString(),
+      name: item.name,
+      date: '',
+      link: item.link || '',
+      description: item.subtitle || '',
+      createdAt: new Date().toISOString(),
+    });
+    saveData();
+    renderConferencesList();
+  }
+}
+
+function initDiscoveryPage() {
+  const discoveryForm = document.getElementById('discoveryForm');
+  const discoveryStatus = document.getElementById('discoveryStatus');
+  const clearBtn = document.getElementById('clearDiscoveryBtn');
+  const manualForm = document.getElementById('manualSourceForm');
+  const resultsContainer = document.getElementById('discoveryResults');
+
+  discoveryForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(discoveryForm);
+    const query = formData.get('query').trim();
+    const type = formData.get('sourceType');
+    if (!query) return;
+    discoveryStatus.textContent = 'Searching online sources...';
+    try {
+      if (type === 'journal') {
+        discoveryResults = await fetchJournalSuggestions(query);
+      } else {
+        discoveryResults = await fetchConferenceSuggestions(query);
+      }
+      renderDiscoveryResults(discoveryResults);
+      discoveryStatus.textContent = `Showing ${discoveryResults.length} suggestion(s).`;
+    } catch (error) {
+      console.warn('Search error', error);
+      discoveryStatus.textContent = 'Unable to fetch results right now. Please try again.';
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    discoveryForm.reset();
+    discoveryResults = [];
+    discoveryStatus.textContent = '';
+    renderDiscoveryResults([]);
+  });
+
+  resultsContainer.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-add]');
+    if (!button) return;
+    const targetId = button.dataset.id;
+    const item = discoveryResults.find((result) => result.id === targetId);
+    if (!item) return;
+    addDiscoveryItem(item);
+    button.textContent = 'Added';
+    button.disabled = true;
+  });
+
+  manualForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(manualForm);
+    const type = data.get('type');
+    const name = data.get('name').trim();
+    if (!name) return;
+    if (type === 'journal') {
+      journals.push({
+        id: Date.now().toString(),
+        name,
+        publisher: data.get('publisher').trim() || '',
+        category: '',
+        link: data.get('link').trim() || '',
+        ifValue: '',
+        createdAt: new Date().toISOString(),
+      });
+      renderJournalsList();
+    } else {
+      conferences.push({
+        id: Date.now().toString(),
+        name,
+        date: '',
+        link: data.get('link').trim() || '',
+        description: data.get('publisher').trim() || '',
+        createdAt: new Date().toISOString(),
+      });
+      renderConferencesList();
+    }
+    saveData();
+    manualForm.reset();
   });
 }
 
@@ -689,6 +882,10 @@ function startAppForUser(userName) {
   document.getElementById('addPaperBtn').addEventListener('click', showAddPaperModal);
   document.getElementById('addJournalBtn').addEventListener('click', showAddJournalModal);
   document.getElementById('addConferenceBtn').addEventListener('click', showAddConferenceModal);
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    showPage('discoveryPage');
+  });
+  initDiscoveryPage();
   // Paper filter tabs events
   document.querySelectorAll('#papersFilterTabs .tab').forEach((tab) => {
     tab.addEventListener('click', () => {

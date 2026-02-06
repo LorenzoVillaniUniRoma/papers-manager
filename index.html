@@ -114,6 +114,68 @@
       </div>
     </main>
 
+    <main id="discoveryPage" class="page hidden">
+      <section class="section-header">
+        <h2>Search Journals & Conferences</h2>
+        <span class="muted">Connected to Crossref & DBLP</span>
+      </section>
+      <section class="discovery-panel">
+        <form id="discoveryForm" class="discovery-form">
+          <div class="form-group">
+            <label for="discoveryQuery">Keyword or Topic</label>
+            <input type="text" id="discoveryQuery" name="query" placeholder="e.g. renewable energy, AI in healthcare" required />
+          </div>
+          <div class="form-group inline">
+            <label>Search for</label>
+            <div class="segmented-control">
+              <label>
+                <input type="radio" name="sourceType" value="journal" checked />
+                Journals
+              </label>
+              <label>
+                <input type="radio" name="sourceType" value="conference" />
+                Conferences
+              </label>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Find Suggestions</button>
+            <button type="button" class="btn-secondary" id="clearDiscoveryBtn">Clear</button>
+          </div>
+        </form>
+        <div id="discoveryStatus" class="muted"></div>
+        <div id="discoveryResults" class="list-container"></div>
+      </section>
+
+      <section class="manual-add">
+        <h3>Add Manually</h3>
+        <form id="manualSourceForm" class="manual-form">
+          <div class="form-group">
+            <label for="manualSourceType">Type</label>
+            <select id="manualSourceType" name="type">
+              <option value="journal">Journal</option>
+              <option value="conference">Conference</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="manualSourceName">Name</label>
+            <input type="text" id="manualSourceName" name="name" required />
+          </div>
+          <div class="form-group">
+            <label for="manualSourceLink">Website URL (optional)</label>
+            <input type="url" id="manualSourceLink" name="link" placeholder="https://" />
+          </div>
+          <div class="form-group">
+            <label for="manualSourcePublisher">Publisher/Organizer (optional)</label>
+            <input type="text" id="manualSourcePublisher" name="publisher" placeholder="e.g. IEEE, ACM" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Add Source</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
     <!-- Bottom navigation -->
     <nav class="bottom-nav">
       <button class="nav-item active" data-target="dashboardPage">
